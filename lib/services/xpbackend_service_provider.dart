@@ -11,28 +11,29 @@ class XPBackendServiceProvider {
 
   static Future<List<T>> getObjectList<T>({
     required String resourcePath,
-    required Function(String) parseBody,
+    required Function(String) listFromJson,
   }) async {
     var url = Uri.https(host, '${apiPath}/${resourcePath}.json');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
-      List<T> data = parseBody(response.body);
+      List<T> data = listFromJson(response.body);
       return (data);
     } else {
       return [];
     }
   }
 
-  static Future<List<T>> getObjectById<T>(
-      {required int id,
-      required String resourcePath,
-      required Function(String) parseBody}) async {
+  static Future<List<T>> getObjectById<T>({
+    required int id,
+    required String resourcePath,
+    required Function(String) objectFromJson,
+  }) async {
     var url = Uri.https(host, '${apiPath}/${resourcePath}/${id}.json');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
-      T object = parseBody(response.body);
+      T object = objectFromJson(response.body);
       return ([object]);
     } else {
       return [];
@@ -63,11 +64,11 @@ class XPBackendServiceProvider {
   static Future<bool> updateObjectById<T>({
     required int id,
     required T data,
-    required Function(T) toJson,
+    required Function(T) objectToJson,
     required String resourcePath,
   }) async {
     var url = Uri.https(host, '${apiPath}/${resourcePath}/${id}.json');
-    String json = toJson(data);
+    String json = objectToJson(data);
 
     http.Response resonse = await http.put(
       url,
