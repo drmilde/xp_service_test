@@ -25,6 +25,12 @@ class XPService {
     return result[0];
   }
 
+  Future<bool> updateTaskById({required int id, required Task data}) async {
+    var result = await XPBackendServiceProvider.updateObjectById<Task>(
+        id: id, data: data, resourcePath: "tasks", toJson: taskToJson);
+    return result;
+  }
+
   Future<bool> deleteTaskById({required int id}) async {
     var result = await XPBackendServiceProvider.deleteObjectById(
       id: id,

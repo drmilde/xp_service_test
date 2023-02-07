@@ -6,13 +6,11 @@ import '../../services/model/task.dart';
 import '../../services/xp_service.dart';
 import '../../services/model/object_not_found_exception.dart';
 
-
 class MigraeneanfallEditScreen extends StatelessWidget {
   int id;
   late XPService service;
   late Task task;
 
-  void _onChanged(dynamic val) => debugPrint(val.toString());
   final _formKey = GlobalKey<FormBuilderState>();
 
   MigraeneanfallEditScreen({required this.id, Key? key}) : super(key: key) {
@@ -34,9 +32,11 @@ class MigraeneanfallEditScreen extends StatelessWidget {
                 future: _loadUser(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    if (snapshot.data!) { // nutzer mit id wurde gefunden
-                      return _buildForm(snapshot);
-                    } else { // nutzer mit id existiert nicht
+                    if (snapshot.data!) {
+                      // nutzer mit id wurde gefunden
+                      return _buildForm(context, snapshot);
+                    } else {
+                      // nutzer mit id existiert nicht
                       return Container(
                         child: Text("error loading nutzer"),
                       );
@@ -55,13 +55,12 @@ class MigraeneanfallEditScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildForm(AsyncSnapshot<bool> snapshot) {
+  Widget _buildForm(BuildContext context, AsyncSnapshot<bool> snapshot) {
     return FormBuilder(
       key: _formKey,
       // enabled: false,
       onChanged: () {
         _formKey.currentState!.save();
-        debugPrint(_formKey.currentState!.value.toString());
       },
       autovalidateMode: AutovalidateMode.disabled,
       skipDisabled: true,
@@ -69,20 +68,60 @@ class MigraeneanfallEditScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: <Widget>[
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             _buildFormTextField(
               name: 'titel',
               labelText: 'Titel',
               value: task.title,
+              width: 400,
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             _buildFormTextField(
               name: 'category',
               labelText: 'Kategorie',
               value: task.category,
+              width: 400,
             ),
+            const SizedBox(height: 16),
+            _SubmitButton(
+                text: "Speichern",
+                callback: () async {
+                  Task data = Task(
+                    title: _formKey.currentState!.value['titel'],
+                    category: _formKey.currentState!.value['category'],
+                    rewardTickets: task.rewardTickets,
+                    rewardCoins: task.rewardCoins,
+                    hasRewardXp: task.hasRewardXp,
+                    id: task.id,
+                  );
+
+                  bool result =
+                      await service.updateTaskById(id: task.id, data: data);
+
+                  Navigator.of(context).pop();
+                }),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _SubmitButton(
+      {String text = "Submit", required VoidCallback callback}) {
+    return ElevatedButton(
+      onPressed: () {
+        //debugPrint(_formKey.currentState?.value.toString());
+        if (_formKey.currentState?.saveAndValidate() ?? false) {
+          // TODO update implementieren
+          callback();
+        } else {
+          // TODO handle Form error
+          debugPrint('Validierung fehlgeschlagen!');
+        }
+      },
+      child: Text(
+        text,
+        style: TextStyle(color: Colors.white),
       ),
     );
   }
@@ -91,9 +130,10 @@ class MigraeneanfallEditScreen extends StatelessWidget {
     required String name,
     required String labelText,
     required String value,
+    double width = 250,
   }) {
     return Container(
-      width: 250,
+      width: width,
       child: FormBuilderTextField(
         autovalidateMode: AutovalidateMode.disabled,
         name: name,
@@ -102,7 +142,7 @@ class MigraeneanfallEditScreen extends StatelessWidget {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          suffixIcon: _circularIconButton(),
+          suffixIcon: _circularIconButton(name),
         ),
         onChanged: (val) {
 // do something sensible here
@@ -119,9 +159,13 @@ class MigraeneanfallEditScreen extends StatelessWidget {
     );
   }
 
-  Widget _circularIconButton() {
+  Widget _circularIconButton(String fieldName) {
     return IconButton(
-      onPressed: () {},
+      onPressed: () {
+        print("reset ${fieldName}");
+        print(_formKey.currentState!.fields[fieldName]!.value);
+        _formKey.currentState!.fields[fieldName]!.didChange("");
+      },
       icon: Container(
         width: 24,
         height: 24,
@@ -150,7 +194,7 @@ class MigraeneanfallEditScreen extends StatelessWidget {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          suffixIcon: _circularIconButton(),
+          suffixIcon: _circularIconButton(name),
         ),
         onChanged: (val) {
 // do something sensible here
