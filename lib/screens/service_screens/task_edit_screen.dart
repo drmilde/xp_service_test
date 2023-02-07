@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:get/get.dart';
+import 'package:xp_service_test/services/controller/xp_state_controller.dart';
 
 import '../../services/model/task.dart';
 import '../../services/xp_service.dart';
 import '../../services/model/object_not_found_exception.dart';
 
 class MigraeneanfallEditScreen extends StatelessWidget {
+  XPStateController _controller = Get.find();
   int id;
   late XPService service;
   late Task task;
@@ -97,6 +100,11 @@ class MigraeneanfallEditScreen extends StatelessWidget {
 
                   bool result =
                       await service.updateTaskById(id: task.id, data: data);
+
+                  // es wurde etwas verändert
+                  if (result) {
+                    _controller.change();
+                  }
 
                   Navigator.of(context).pop();
                 }),

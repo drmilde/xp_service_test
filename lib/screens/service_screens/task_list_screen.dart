@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:xp_service_test/services/controller/xp_state_controller.dart';
 
 import '../../services/model/task.dart';
 import '../../services/xp_service.dart';
@@ -9,11 +11,12 @@ class TaskListScreen extends StatefulWidget {
   const TaskListScreen({Key? key}) : super(key: key);
 
   @override
-  _TaskListScreenState createState() =>
-      _TaskListScreenState();
+  _TaskListScreenState createState() => _TaskListScreenState();
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
+  XPStateController _controller = Get.find();
+
   XPService service = XPService();
   List<Task> tasks = [];
 
@@ -42,8 +45,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
               title: "Neuer Task",
             );
 
-            bool result =
-                await XPBackendServiceProvider.createObject<Task>(
+            bool result = await XPBackendServiceProvider.createObject<Task>(
               data: task,
               toJson: taskToJson,
               resourcePath: "tasks.json",
@@ -63,15 +65,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
               SizedBox(
                 height: 16,
               ),
-              FutureBuilder<bool>(
-                future: _loadUsers(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return _buildListView(snapshot);
-                  } else if (snapshot.hasError) {
-                    return Text('${snapshot.error}');
-                  }
-                  return CircularProgressIndicator();
+              Obx(
+                () {
+                  int change = _controller.somethingChanged.value;
+                  return FutureBuilder<bool>(
+                  future: _loadUsers(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return _buildListView(snapshot);
+                    } else if (snapshot.hasError) {
+                      return Text('${snapshot.error}');
+                    }
+                    return CircularProgressIndicator();
+                  },
+                );
                 },
               ),
               SizedBox(
@@ -158,8 +165,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   children: [
                     IconButton(
                       onPressed: () async {
-                        bool result = await service.deleteTaskById(
-                            id: task.id);
+                        bool result = await service.deleteTaskById(id: task.id);
                         setState(() {});
                       },
                       icon: Icon(Icons.delete_outline_outlined),
